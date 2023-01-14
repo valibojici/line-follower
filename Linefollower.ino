@@ -1,4 +1,5 @@
 #include <QTRSensors.h>
+// Motors pins
 const int m11Pin = 7;
 const int m12Pin = 6;
 const int m21Pin = 5;
@@ -8,12 +9,6 @@ const int m2Enable = 10;
 
 int m1Speed = 0;
 int m2Speed = 0;
-
-
-// increase kp’s value and see what happens
-// float kp = 25.6;
-// float ki = 0;
-// float kd = 55.8;
 
 float kp = 9;
 float ki = 0;
@@ -52,10 +47,16 @@ void setup() {
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5}, sensorCount);
 
   delay(500);
+
+  calibrateQTR();
+}
+
+void calibrateQTR() {
+
+  // Calibrating the QTR
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH); // turn on Arduino's LED to indicate we are in calibration mode
   int speed = 160;
-  unsigned long timer = millis();
 
   int turns = 0;
   int state = 1;
@@ -67,7 +68,7 @@ void setup() {
 
     switch (state) {
       case 1:
-        setMotorSpeed(speed, -speed);
+        setMotorSpeed(160, -160);
         
         if (sensorValues[0] > 800 && sensorValues[5] < 800) {
           // turn right
@@ -76,7 +77,7 @@ void setup() {
         }
         break;
       case -1:
-        setMotorSpeed(-speed, speed);
+        setMotorSpeed(-160, 160);
         if (sensorValues[5] > 800 && sensorValues[0] < 800) {
           // turn left
           state = 1;
@@ -85,11 +86,29 @@ void setup() {
         break;
     }
   }
+  // Turn the LED off when the calibration is finished
   digitalWrite(LED_BUILTIN, LOW);
+
+}
+
+int PIDcontrol(float error) {
+
+  p = error;
+  i = i + error;
+  d = error - lastError;
+
+  lastError = error;
+  int motorSpeed = kp * p + ki * i + kd * d;
+  return motorSpeed;
+
 }
 
 void loop() {
-  int motorSpeed = pidControl();
+ float error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
+
+
+  int motorSpeed = PIDcontrol(error);
+  
   m1Speed = baseSpeed;
   m2Speed = baseSpeed;
 
@@ -105,24 +124,13 @@ void loop() {
 
 
   setMotorSpeed(m1Speed, m2Speed);
+
 }
 
 
-// calculate PID value based on error, kp, kd, ki, p, i and d.
-float pidControl() {
-  error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
-
-  p = error;
-  i = i + error;
-  d = error - lastError;
-
-  lastError = error;
-
-  return kp * p + ki * i + kd * d; // = error in this case
-}
-
-
+// each arguments takes values between -255 and 255. The negative values represent the motor speed in reverse.
 void setMotorSpeed(int motor1Speed, int motor2Speed) {
+
   if (motor1Speed == 0) {
     digitalWrite(m11Pin, LOW);
     digitalWrite(m12Pin, LOW);
@@ -158,3 +166,4 @@ void setMotorSpeed(int motor1Speed, int motor2Speed) {
     } 
   }
 }
+
