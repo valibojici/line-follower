@@ -15,18 +15,18 @@ int m2Speed = 0;
 // float ki = 0;
 // float kd = 55.8;
 
-float kp = 8;
+float kp = 9;
 float ki = 0;
 float kd = 3;
 
 
 
-int p = 1;
-int i = 0;
-int d = 0;
+float p = 1;
+float i = 0;
+float d = 0;
 
-int error = 0;
-int lastError = 0;
+float error = 0;
+float lastError = 0;
 
 const int maxSpeed = 255;
 const int minSpeed = -255;
@@ -119,11 +119,13 @@ void setup() {
 
 void loop() {
   // inefficient code, written in loop. You must create separate functions
-  int error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
+  float error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
 
   p = error;
   i = i + error;
   d = error - lastError;
+
+  lastError = error;
 
   int motorSpeed = kp * p + ki * i + kd * d; // = error in this case
   
@@ -145,8 +147,8 @@ void loop() {
   // maybe the lower bound should be negative, instead of 0? This of what happens when making a steep turn
   // m1Speed = constrain(m1Speed, 0, maxSpeed);
   // m2Speed = constrain(m2Speed, 0, maxSpeed);
-  m1Speed = constrain(m1Speed, -100, maxSpeed);
-  m2Speed = constrain(m2Speed, -100, maxSpeed);
+  m1Speed = constrain(m1Speed, -maxSpeed, maxSpeed);
+  m2Speed = constrain(m2Speed, -maxSpeed, maxSpeed);
 
 
   setMotorSpeed(m1Speed, m2Speed);
