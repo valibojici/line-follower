@@ -64,24 +64,10 @@ void setup() {
   while (turns < 12) {
     qtr.calibrate();
     qtr.readLineBlack(sensorValues);
-    // Serial.print(sensorValues[0]);
-    // Serial.print(" ");
-    // Serial.print(sensorValues[1]);
-    // Serial.print(" ");
-    // Serial.print(sensorValues[2]);
-    // Serial.print(" ");
-    // Serial.print(sensorValues[3]);
-    // Serial.print(" ");
-    // Serial.print(sensorValues[4]);
-    // Serial.print(" ");
-    // Serial.print(sensorValues[5]);
-    // Serial.println("");
-    //delay(2000);
-
 
     switch (state) {
       case 1:
-        setMotorSpeed(160, -160);
+        setMotorSpeed(speed, -speed);
         
         if (sensorValues[0] > 800 && sensorValues[5] < 800) {
           // turn right
@@ -90,7 +76,7 @@ void setup() {
         }
         break;
       case -1:
-        setMotorSpeed(-160, 160);
+        setMotorSpeed(-speed, speed);
         if (sensorValues[5] > 800 && sensorValues[0] < 800) {
           // turn left
           state = 1;
@@ -99,27 +85,32 @@ void setup() {
         break;
     }
   }
-  // calibrate the sensor. For maximum grade the line follower should do the movement itself, without human interaction.
-  // for (uint16_t i = 0; i < 400; i++)
-  // {
-  //   qtr.calibrate();
-  //   if (millis() - timer > 400) {
-  //     speed = -speed;
-  //     timer = millis();
-  //   }
-
-  //   setMotorSpeed(speed, -speed);
-  //   // do motor movement here, with millis() as to not ruin calibration)
-  // }
   digitalWrite(LED_BUILTIN, LOW);
-
-  
-   
 }
 
 void loop() {
-  // inefficient code, written in loop. You must create separate functions
-  float error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
+  int motorSpeed = pidControl();
+  m1Speed = baseSpeed;
+  m2Speed = baseSpeed;
+
+  if (error < 0) {
+    m1Speed += motorSpeed;
+  }
+  else if (error > 0) {
+    m2Speed -= motorSpeed;
+  }
+  
+  m1Speed = constrain(m1Speed, -maxSpeed, maxSpeed);
+  m2Speed = constrain(m2Speed, -maxSpeed, maxSpeed);
+
+
+  setMotorSpeed(m1Speed, m2Speed);
+}
+
+
+// calculate PID value based on error, kp, kd, ki, p, i and d.
+float pidControl() {
+  error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
 
   p = error;
   i = i + error;
@@ -127,57 +118,11 @@ void loop() {
 
   lastError = error;
 
-  int motorSpeed = kp * p + ki * i + kd * d; // = error in this case
-  
-  m1Speed = baseSpeed;
-  m2Speed = baseSpeed;
-
-  // a bit counter intuitive because of the signs
-  // basically in the first if, you substract the error from m1Speed (you add the negative)
-  // in the 2nd if you add the error to m2Speed (you substract the negative)
-  // it's just the way the values of the sensors and/or motors lined up
-  if (error < 0) {
-    m1Speed += motorSpeed;
-  }
-  else if (error > 0) {
-    m2Speed -= motorSpeed;
-  }
-  // make sure it doesn't go past limits. You can use -255 instead of 0 if calibrated programmed properly.
-  // making sure we don't go out of bounds
-  // maybe the lower bound should be negative, instead of 0? This of what happens when making a steep turn
-  // m1Speed = constrain(m1Speed, 0, maxSpeed);
-  // m2Speed = constrain(m2Speed, 0, maxSpeed);
-  m1Speed = constrain(m1Speed, -maxSpeed, maxSpeed);
-  m2Speed = constrain(m2Speed, -maxSpeed, maxSpeed);
-
-
-  setMotorSpeed(m1Speed, m2Speed);
-
-  
- //DEBUGGING
-//  Serial.print("Error: ");
-//  Serial.println(error);
-//  Serial.print("M1 speed: ");
-//  Serial.println(m1Speed);
-
-//  Serial.print("M2 speed: ");
-//  Serial.println(m2Speed);
-
- //delay(250);
+  return kp * p + ki * i + kd * d; // = error in this case
 }
 
 
-// calculate PID value based on error, kp, kd, ki, p, i and d.
-void pidControl(float kp, float ki, float kd) {
-// TODO
-}
-
-
-// each arguments takes values between -255 and 255. The negative values represent the motor speed in reverse.
 void setMotorSpeed(int motor1Speed, int motor2Speed) {
-  // remove comment if any of the motors are going in reverse 
-  //  motor1Speed = -motor1Speed;
-  //  motor2Speed = -motor2Speed;
   if (motor1Speed == 0) {
     digitalWrite(m11Pin, LOW);
     digitalWrite(m12Pin, LOW);
@@ -213,4 +158,3 @@ void setMotorSpeed(int motor1Speed, int motor2Speed) {
     } 
   }
 }
-
