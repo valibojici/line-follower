@@ -1,8 +1,14 @@
 # Line follower
 
 ## Description
-This project was made by @Daria602 and I as part of our Introduction to Robotics course. 
-This is a line follower project that uses a microcontroller and reflectance sensors to follow black lines on a white surface. The robot is capable of following straight and curved lines. The project uses a PID controller to control the robot's movement and keep it on the line.
+This project was made as part of the Introduction to Robotics course.
+
+## Task
+This is a line follower project that was done in a team, [@Daria602](https://github.com/Daria602) ([Daria's repo](https://github.com/Daria602/LineFollower)) and I received a kit containing all the required components. After we assembled it we had 10 hours to program it and to complete a course in less than 20s for maximum points. The robot uses a microcontroller and reflectance sensors to follow black lines on a white surface. 
+
+The robot is capable of following straight and curved lines and it calibrates itself when it starts. We used a PD controller to control the robot's movement and keep it on the line.
+
+We completed the course in 20s.
 
 ## Demo
 [Youtube link](https://youtu.be/GUKyuXd97sc)
@@ -29,3 +35,5 @@ Arduino, NOT the one from the battery)
 3. Connect the L293D driver to Arduino and to both motors
 4. Connect the battery to VIN (understand the concept, first)
 ![image](https://user-images.githubusercontent.com/68808448/212927511-4d68ecff-2055-4d5c-9daa-92897d904884.png)
+
+
